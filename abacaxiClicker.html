@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Abacaxi Clicker</title>
+    <style>
+        .pop{
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-image: url("https://www.hortifruti.com.br/_next/image?url=https%3A%2F%2Fhortifrutibr.vtexassets.com%2Farquivos%2Fids%2F155442%2FAbacaxi-Organico-Unidade.jpg%3Fv%3D638671092903500000%26format%3Dwebp&w=320&q=75");
+            background-size: contain;
+            background-repeat: no-repeat;
+            animation: floatUp 1s ease-out forwards;
+            pointer-events: none;
+            user-select: none;
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.2));
+            z-index: 999;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }            
+        }
+
+        body{
+            background-color: #FFEF96;
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #conquista {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: #222;
+            color: white;
+            border-left: 5px solid #4CAF50;
+            padding: 15px;
+            border-radius: 5px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            opacity: 0; /* invisivel */
+            transform: translateX(-100%); /* começa fora da tela*/
+            transition: all 0.5s ease;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        #conquista img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #conquista h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        #conquista.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 20px;
+            background: #D4A202;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .top-bar p {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .top-bar input[type="button"]{
+            height: 36px;
+            padding: 0 10px;
+            cursor: pointer;
+        }
+
+        input{
+            height: 40px;
+            width: 270px;
+            margin-left: 0%;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .top-bar input[type="text"]{
+            height: 40px;
+            width: 150px;
+        }
+
+        .melhorias {
+            background: #FFEF96;
+            padding: 20px;
+            display: flex;
+            gap: 12px;
+            flex-direction: column;
+            position: relative;
+            min-width: 220px;
+        }
+
+        .melhorias input[type="button"]{
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: white;
+        }
+
+        .abacaxi_div {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .abacaxi_div img{
+            width: 260px;
+            max-width: 40%;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+            user-select: none;
+        }
+
+        #achievementsSidebar {
+            position: fixed;
+            right: 0;
+            top: 40%;
+            transform: translateY(-50%);
+            width: 250px;
+            max-height: 70vh;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            padding: 10px;
+            border-radius: 8px 0 0 8px;
+            box-shadow: -2px 2px 6px rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        #achievementsSidebar h2 {
+            margin-top: 0;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        #achievementsList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #achievementsList li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        #achievementsList li img {
+            width: 24px;
+            height: 24px;
+            margin-right: 6px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        #imagenzinha {
+            display: none;
+            width: 120px;
+            margin-top: 12px;
+        }
+
+        /* responsividade simples */
+        @media (max-width: 700px) {
+            .top-bar { flex-direction: column; align-items: flex-start; }
+            #achievementsSidebar { display: none; }
+            .abacaxi_div img { max-width: 60%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <p id="contagem">Abacaxis: 0</p>
+        <p id="pontosporclique">Abacaxis por clique: 1</p>
+        <p id="autoAbacaxi">Abacaxis por segundo: 0</p>
+        <p id="aviso" style="color:#330; margin-left: 10px;"></p>
+        <input type="button" id="Doar" value="Doar seus abacaxis" onclick="zerarCookies()">
+    </div>
+
+    <section style="display:flex; gap:20px; padding:20px; flex-wrap:wrap;">
+        <div class="melhorias">
+            <input type="button" id="melhor1" value="Comprar melhoria 1 por 25" onclick="comprarmelhoria()">
+            <input type="button" id="melhor2" value="Comprar melhoria 2 por 65" onclick="comprarmelhoria2()">
+            <input type="button" id="melhor3" value="Comprar melhoria 3 por 165" onclick="comprarmelhoria3()">
+            <input type="button" id="melhor4" value="Comprar melhoria 4 por 445" onclick="comprarmelhoria4()">
+            <input type="button" id="melhor5" value="Comprar melhoria 5 por 1245" onclick="comprarmelhoria5()">
+            <input type="button" id="melhor6" value="Comprar melhoria 6 por 3615" onclick="comprarmelhoria6()">
+            <input type="button" id="melhor7" value="Comprar melhoria 7 por 10845" onclick="comprarmelhoria7()">
+            <input type="button" id="melhor8" value="Comprar melhoria 8 por 33620" onclick="comprarmelhoria8()">
+        </div>
+
+        <div class="abacaxi_div">
+            <div style="text-align:center">
+                <img id="abacaxi" src="https://img.freepik.com/fotos-premium/abacaxi-em-um-fundo-amarelo_186260-311.jpg" alt="Abacaxi" onclick="clicar()">
+                <br>
+                <img id="imagenzinha" src="https://media.tenor.com/IjIXFxklw40AAAAe/meme-shitpost.png" alt="imagenzinha">
+            </div>
+        </div>
+
+        <div id="achievementsSidebar">
+            <h2>Conquistas</h2>
+            <ul id="achievementsList"></ul>
+        </div>
+    </section>
+
+    <div id="conquista" class="hidden">
+        <img id="imgconquista" src="https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" alt="conquista" onclick="labelconquista()">
+        <h3>Conquista desbloqueada!</h3>
+    </div>
+
+<script>
+    const botao = document.getElementById("melhor1");
+    const botao2 = document.getElementById("melhor2");
+    const botao3 = document.getElementById("melhor3");
+    const botao4 = document.getElementById("melhor4");
+    const botao5 = document.getElementById("melhor5");
+    const botao6 = document.getElementById("melhor6");
+    const botao7 = document.getElementById("melhor7");
+    const botao8 = document.getElementById("melhor8");
+    const aviso = document.getElementById("aviso");
+    const abacaxi = document.getElementById("abacaxi");
+
+    let contagem = 0;
+    let pontosporclique = 1;
+    let autoAbacaxi = 0;
+    let customelhoria = 25;
+    let customelhoria2 = 65;
+    let customelhoria3 = 165;
+    let customelhoria4 = 445;
+    let customelhoria5 = 1245;
+    let customelhoria6 = 3615;
+    let customelhoria7 = 10845;
+    let customelhoria8 = 33620;
+
+    let numeroscliques = 0;
+
+    function atualizarBotoes() {
+        botao.value  = `Comprar melhoria 1 (Preço: ${customelhoria})`;
+        botao2.value = `Comprar melhoria 2 (Preço: ${customelhoria2})`;
+        botao3.value = `Comprar melhoria 3 (Preço: ${customelhoria3})`;
+        botao4.value = `Comprar melhoria 4 (Preço: ${customelhoria4})`;
+        botao5.value = `Comprar melhoria 5 (Preço: ${customelhoria5})`;
+        botao6.value = `Comprar melhoria 6 (Preço: ${customelhoria6})`;
+        botao7.value = `Comprar melhoria 7 (Preço: ${customelhoria7})`;
+        botao8.value = `Comprar melhoria 8 (Preço: ${customelhoria8})`;
+    }
+
+    setInterval(() => {
+        salvarJogo();
+        verconquista();
+    }, 5000);
+
+    setInterval(() => {
+        contagem += autoAbacaxi;
+        atualizarcontador();
+    }, 1000);
+
+    function clicar() {
+        contagem += pontosporclique;
+        numeroscliques += 1;
+        atualizarcontador();
+        verconquista();
+    }
+
+    function zerarCookies(){
+        let resposta = confirm("Se você aceitar todos os seus abacaxis serão doados");
+        if (resposta){
+            contagem = 0;
+            pontosporclique = 1;
+            autoAbacaxi = 0;
+            customelhoria = 25;
+            customelhoria2 = 65;
+            customelhoria3 = 165;
+            customelhoria4 = 445;
+            customelhoria5 = 1245;
+            customelhoria6 = 3615;
+            customelhoria7 = 10845;
+            customelhoria8 = 33620;
+            numeroscliques = 0;
+            conquistas = {};
+            localStorage.clear();
+            atualizarBotoes();
+            atualizarcontador();
+            renderSidebar();
+        } else {
+            alert("Nada foi doado, as crianças órfãs estão sem abacaxis, seu monstro");
+        }
+    }
+
+    function atualizarcontador() {
+        document.getElementById("contagem").innerText = "Abacaxis: " + contagem;
+        document.getElementById("pontosporclique").innerText = "Abacaxis por clique: " + pontosporclique;
+        document.getElementById("autoAbacaxi").innerText = "Abacaxis por segundo: " + autoAbacaxi;
+        if (contagem >= 15 && contagem <= 25) {
+            document.getElementById("imagenzinha").style.display = "block";
+        } else {
+            document.getElementById("imagenzinha").style.display = "none";
+        }
+    }
+
+    function comprarmelhoria() {
+        if (contagem >= customelhoria) {
+            pontosporclique += 1;
+            aviso.innerText = "Melhoria de clique comprada com sucesso!";
+            contagem -= customelhoria;
+            customelhoria = Math.floor(customelhoria * 1.5);
+            atualizarcontador();
+            atualizarBotoes();
+        } else {
+            aviso.innerText = `Você precisa de mais ${customelhoria - contagem} abacaxis para comprar.`;
+        }
+    }
+
+    function comprarmelhoria2() {
+        if (contagem >= customelhoria2) {
+            autoAbacaxi += 1;
+            aviso.innerText = "Melhoria automática comprada com sucesso!";
+            contagem -= customelhoria2;
+            customelhoria2 = Math.floor(customelhoria2 * 1.5);
+            atualizarcontador();
+            atualizarBotoes();
+        } else {
+            aviso.innerText = `Você precisa de mais ${customelhoria2 - contagem} abacaxis para comprar.`;
+        }
+    }
+
+    function comprarmelhoria3() {
+        if (contagem >= customelhoria3) {
+            pontosporclique += 3;
+            autoAbacaxi += 2;
+            aviso.innerText = "Melhoria comprada com sucesso!";
+            contagem -= customelhoria3;
+            customelhoria3 = Math.floor(customelhoria3 * 1.5);
+            atualizarcontador();
+            atualizarBotoes();
+        } else {
+            aviso.innerText = `Você precisa de mais ${customelhoria3 - contagem} abacaxis para comprar.`;
+        }
+    }
+
+    function comprarmelhoria4() {
+        if (contagem >= customelhoria4) {
+            autoAbacaxi += 3;
+            pontosporclique += 7;
+            aviso.innerText = "Melhoria comprada com sucesso!";
+            contagem -= customelhoria4;
+            customelhoria4 = Math.floor(customelhoria4 * 1.5);
+            atualizarcontador();
+            atualizarBotoes();
+        } else {
+            aviso.innerText = `Você precisa de mais ${customelhoria4 - contagem} abacaxis para comprar.`;
+        }
+    }
+
+    function comprarmelhoria5() {
+        if (contagem >= customelhoria5) {
+            autoAbacaxi += 4;
+            pontosporclique += 10;
+            aviso.innerText = "Melhoria comprada com sucesso!";
+            contagem -= customelhoria5;
+            customelhoria5 = Math.floor(customelhoria5 * 1.5);
+            atualizarcontador();
+            atualizarBotoes();
+        } else {
+            aviso.innerText = `Você precisa de mais ${customelhoria5 - contagem} abacaxis para comprar.`;
+        }
+    }
+
+    function comprarmelhoria6() {
+        if (contagem >= customelhoria6) {
+            autoAbacaxi += 5;
+            pontosporclique += 17;
+            aviso.innerText = "Melhoria comprada com sucesso!";
+            contagem -= customelhoria6;
+            customelhoria6 = Math.floor(customelhoria6 * 1.5);
+            atualizarcontador();
+            atualizarBotoes();
+        } else {
+            aviso.innerText = `Você precisa de mais ${customelhoria6 - contagem} abacaxis para comprar.`;
+        }
+    }
+
+    function comprarmelhoria7() {
+        if (contagem >= customelhoria7) {
+            autoAbacaxi += 6;
+            pontosporclique += 26;
+            aviso.innerText = "Melhoria comprada com sucesso!";
+            contagem -= customelhoria7;
+            customelhoria7 = Math.floor(customelhoria7 * 1.5);
+            atualizarcontador();
+            atualizarBotoes();
+        } else {
+            aviso.innerText = `Você precisa de mais ${customelhoria7 - contagem} abacaxis para comprar.`;
+        }
+    }
+
+    function comprarmelhoria8() {
+        if (contagem >= customelhoria8) {
+            autoAbacaxi += 7;
+            pontosporclique += 38;
+            aviso.innerText = "Melhoria comprada com sucesso!";
+            contagem -= customelhoria8;
+            customelhoria8 = Math.floor(customelhoria8 * 1.5);
+            atualizarcontador();
+            atualizarBotoes();
+        } else {
+            aviso.innerText = `Você precisa de mais ${customelhoria8 - contagem} abacaxis para comprar.`;
+        }
+    }
+
+    let conquistas = {
+        primeiroClique: false,
+        vicioInicial: false,
+        cliqueManiaco: false,
+        dedoNervoso: false,
+        fornoLigado: false,
+        acucarNoSangue: false,
+        chuvaDeCookies: false,
+        imperioAcucarado: false,
+        primeirosLucros: false,
+        reservasDoces: false,
+        ricoEmBolachas: false,
+        reformaNaCozinha: false,
+        cientistaGourmet: false,
+        maoDeObra: false,
+        linhaProducao: false,
+        vaosefoderem: false
+    };
+
+    function verconquista() {
+        // Conquistas de Clique
+        if (numeroscliques >= 1 && !conquistas.primeiroClique) {
+            conquistas.primeiroClique = true;
+            animacaoconquista("🏆 Primeira mordida! - Você clicou pela primeira vez.", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        if (numeroscliques >= 10 && !conquistas.vicioInicial) {
+            conquistas.vicioInicial = true;
+            animacaoconquista("🏆 Vício Inicial - 10 cliques!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        if (numeroscliques >= 100 && !conquistas.cliqueManiaco) {
+            conquistas.cliqueManiaco = true;
+            animacaoconquista("🏆 Clique Maníaco - 100 cliques!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        if (numeroscliques >= 1000 && !conquistas.dedoNervoso) {
+            conquistas.dedoNervoso = true;
+            animacaoconquista("🏆 Dedo Nervoso - 1.000 cliques!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        // Conquistas de Produção Total
+        if (contagem >= 10 && !conquistas.fornoLigado) {
+            conquistas.fornoLigado = true;
+            animacaoconquista("🏆 Forno Ligado - Produziu 10 abacaxis!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        if (contagem >= 1000 && !conquistas.acucarNoSangue) {
+            conquistas.acucarNoSangue = true;
+            animacaoconquista("🏆 Açúcar no Sangue - 1.000 abacaxis!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        if (contagem >= 1_000_000 && !conquistas.chuvaDeCookies) {
+            conquistas.chuvaDeCookies = true;
+            animacaoconquista("🏆 Chuva de Abacaxis - 1 milhão de abacaxis!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        if (contagem >= 1_000_000_000 && !conquistas.imperioAcucarado) {
+            conquistas.imperioAcucarado = true;
+            animacaoconquista("🏆 Império Açucarado - 1 bilhão de abacaxis!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        // Abacaxis acumulados
+        if (contagem >= 100 && !conquistas.primeirosLucros) {
+            conquistas.primeirosLucros = true;
+            animacaoconquista("🏆 Primeiros Lucros - 100 abacaxis acumulados!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        if (contagem >= 10_000 && !conquistas.reservasDoces) {
+            conquistas.reservasDoces = true;
+            animacaoconquista("🏆 Reservas Doces - 10.000 abacaxis acumulados!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        if (contagem >= 1_000_000 && !conquistas.ricoEmBolachas) {
+            conquistas.ricoEmBolachas = true;
+            animacaoconquista("🏆 Rico em Bolachas - 1 milhão de abacaxis!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        // Upgrades
+        if (pontosporclique > 1 && !conquistas.reformaNaCozinha) {
+            conquistas.reformaNaCozinha = true;
+            animacaoconquista("🏆 Reforma na Cozinha - Comprou a primeira melhoria!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        if (pontosporclique > 10 && !conquistas.cientistaGourmet) {
+            conquistas.cientistaGourmet = true;
+            animacaoconquista("🏆 Cientista Gourmet - Mais de 10 melhorias de clique!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        if (autoAbacaxi >= 1 && !conquistas.maoDeObra) {
+            conquistas.maoDeObra = true;
+            animacaoconquista("🏆 Mão de Obra - Primeira melhoria automática!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        if (autoAbacaxi >= 10 && !conquistas.linhaProducao) {
+            conquistas.linhaProducao = true;
+            animacaoconquista("🏆 Linha de Produção - 10 melhorias automáticas!", "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg");
+        }
+
+        // conquista secreta (mostrar imagenzinha)
+        if (document.getElementById("imagenzinha").style.display === "block" && !conquistas.vaosefoderem) {
+            conquistas.vaosefoderem = true;
+            animacaoconquista("Aquele ovo safado do gato - segredo desbloqueado", "https://media.tenor.com/IjIXFxklw40AAAAe/meme-shitpost.png");
+        }
+    }
+
+    function salvarJogo() {
+        localStorage.setItem("abacaxis", contagem);
+        localStorage.setItem("clique", pontosporclique);
+        localStorage.setItem("auto", autoAbacaxi);
+        localStorage.setItem("melhor1", customelhoria);
+        localStorage.setItem("melhor2", customelhoria2);
+        localStorage.setItem("melhor3", customelhoria3);
+        localStorage.setItem("melhor4", customelhoria4);
+        localStorage.setItem("melhor5", customelhoria5);
+        localStorage.setItem("melhor6", customelhoria6);
+        localStorage.setItem("melhor7", customelhoria7);
+        localStorage.setItem("melhor8", customelhoria8);
+        localStorage.setItem("conquistas", JSON.stringify(conquistas));
+    }
+
+    const conquistaData = {
+      primeiroClique:      { title: "Primeira mordida!",           img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      vicioInicial:        { title: "Vício Inicial",               img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      cliqueManiaco:       { title: "Clique Maníaco",               img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      dedoNervoso:         { title: "Dedo Nervoso",                 img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      fornoLigado:         { title: "Forno Ligado",                 img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      acucarNoSangue:      { title: "Açúcar no Sangue",             img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      chuvaDeCookies:      { title: "Chuva de Abacaxis",            img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      imperioAcucarado:    { title: "Império Açucarado",            img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      primeirosLucros:     { title: "Primeiros Lucros",             img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      reservasDoces:       { title: "Reservas Doces",               img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      ricoEmBolachas:      { title: "Rico em Bolachas",             img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      reformaNaCozinha:    { title: "Reforma na Cozinha",           img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      cientistaGourmet:    { title: "Cientista Gourmet",            img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      maoDeObra:           { title: "Mão de Obra",                  img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      linhaProducao:       { title: "Linha de Produção",            img: "https://pbs.twimg.com/profile_images/1876765399687049216/kLaAM_SN_400x400.jpg" },
+      vaosefoderem:        { title: "Aquele ovo safado do gato",    img: "https://media.tenor.com/IjIXFxklw40AAAAe/meme-shitpost.png" }
+    };
+
+    function carregarJogo(){
+        contagem = parseInt(localStorage.getItem("abacaxis")) || 0;
+        pontosporclique = parseInt(localStorage.getItem("clique")) || 1;
+        autoAbacaxi = parseInt(localStorage.getItem("auto")) || 0;
+        customelhoria = parseInt(localStorage.getItem("melhor1")) || 25;
+        customelhoria2 = parseInt(localStorage.getItem("melhor2")) || 65;
+        customelhoria3 = parseInt(localStorage.getItem("melhor3")) || 165;
+        customelhoria4 = parseInt(localStorage.getItem("melhor4")) || 445;
+        customelhoria5 = parseInt(localStorage.getItem("melhor5")) || 1245;
+        customelhoria6 = parseInt(localStorage.getItem("melhor6")) || 3615;
+        customelhoria7 = parseInt(localStorage.getItem("melhor7")) || 10845;
+        customelhoria8 = parseInt(localStorage.getItem("melhor8")) || 33620;
+
+        const saved = JSON.parse(localStorage.getItem("conquistas")) || {};
+        Object.assign(conquistas, saved);
+
+        atualizarcontador();
+        atualizarBotoes();
+        renderSidebar();
+    }
+
+    function animacaoconquista(title, img = '') {
+        const box = document.getElementById('conquista');
+        box.querySelector('h3').textContent = title;
+        box.querySelector('img').src = img || box.querySelector('img').src;
+
+        box.classList.remove('hidden');
+
+        // Trigger animation
+        setTimeout(() => {
+            box.classList.add('show');
+        }, 100);
+
+        // Ocultar após 4 segundos
+        setTimeout(() => {
+            box.classList.remove('show');
+            setTimeout(() => {
+                box.classList.add('hidden');
+            }, 500);
+        }, 4000);
+        renderSidebar();
+    }
+
+    // pop ao clicar no abacaxi
+    abacaxi.addEventListener('click', (e) => {
+        const rect = abacaxi.getBoundingClientRect();
+        const x = e.clientX;
+        const y = e.clientY;
+
+        const pop = document.createElement('div');
+        pop.classList.add('pop');
+
+        pop.style.left = `${x - 20}px`;
+        pop.style.top = `${y - 20}px`;
+        document.body.appendChild(pop);
+        setTimeout(() => {
+            pop.remove();
+        }, 1000);
+    });
+
+    function renderSidebar() {
+        const list = document.getElementById("achievementsList");
+        list.innerHTML = "";
+        for (const [key, done] of Object.entries(conquistas)) {
+            if (done) {
+                const { title, img } = conquistaData[key] || { title: key, img: "" };
+                const li = document.createElement("li");
+                li.innerHTML = `<img src="${img}" alt=""> ${title}`;
+                list.appendChild(li);
+            }
+        }
+    }
+
+    // inicia ao abrir
+    window.onload = carregarJogo;
+</script>
+</body>
+</html>

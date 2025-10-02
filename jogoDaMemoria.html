@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Memória</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        body{
+            background-color: #00274d;
+            color: #a3d900;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            gap: 40px;
+            padding: 20px;
+        }
+        #opcoes{
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            gap: 10px;
+        }
+        .card{
+            width: 100px;
+            height: 100px;
+            background-color: #2c3e50;
+            border-radius: 10px;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 30px;
+            color: white;
+            user-select: none;
+            display: flex;
+        }
+        .cardVirado{
+            background-color: #a3d900;
+            color: #00274d;
+        }
+    </style>
+</head>
+<body>
+    <div id="opcoes"></div>
+    <script>
+        // Cartas 
+        const cardArray = [
+            {name: "A", img: "A"},
+            {name: "A", img: "A"},
+            {name: "B", img: "B"},
+            {name: "B", img: "B"},
+            {name: "C", img: "C"},
+            {name: "C", img: "C"},
+            {name: "D", img: "D"},
+            {name: "D", img: "D"},
+            {name: "E", img: "D"},
+            {name: "E", img: "D"},
+            {name: "F", img: "D"},
+            {name: "F", img: "D"},
+        ];
+        //Embraralhar as cartas
+        cardArray.sort(()=>0.5-Math.random());
+
+        const tabuleiro = document.querySelector("#opcoes");
+
+        cardArray.forEach((card)=> {
+            const elemento = document.createElement("div");
+            elemento.classList.add("card");
+            elemento.dataset.name = card.name;
+            elemento.innerText = "?";
+            tabuleiro.appendChild(elemento);
+        });
+
+        //Logica
+
+        let primeiro, segundo;
+        let cartaVirada = false;
+        let bloqueio = false;
+
+        function virarCarta(){
+            if (bloqueio) return;
+            if (this === primeiro) return;
+
+            this.classList.add("cardVirado");
+            this.innerText = this.dataset.name;
+
+            if(!cartaVirada){
+                cartaVirada = true;
+                primeiro = this;
+                return;
+            }
+
+            segundo=this;
+            verificacao();
+        }
+        function verificacao(){
+            if (primeiro.dataset.name === segundo.dataset.name){
+                correto();
+            } else{
+                incorreto();
+            }
+        }
+
+        function correto(){
+            primeiro.removeEventListener("click",virarCarta);
+            segundo.removeEventListener("click",virarCarta);
+
+            resetar();
+        }
+        function incorreto(){
+            bloqueio = true;
+
+            setTimeout(()=>{
+                primeiro.classList.remove("cardVirado");
+                segundo.classList.remove("cardVirado");
+                primeiro.innerText = "?";
+                segundo.innerText = "?"
+
+                resetar();
+            },750);
+        }
+
+        function resetar(){
+            [cartaVirada, bloqueio] = [false, false];
+            [primeiro, segundo] = [null, null];
+
+        }
+        document.querySelectorAll(".card").forEach(card => card.addEventListener("click", virarCarta))
+
+    </script>
+</body>
+</html>
+

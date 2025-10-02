@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jogo da Forca</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg,#74ebd5 0%,#ACB6E5 100%);
+    }
+    .container{
+      background:white;padding:30px;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,.2);
+      width:90%;max-width:600px;transition:transform .25s;
+    }
+    .container:hover{transform:scale(1.02)}
+    h1{color:#333;margin-bottom:20px;font-size:2.2rem}
+    #imagem{max-width:200px;margin:15px auto;display:block}
+    #palavra{
+      font-size:2.4rem;margin:18px 0;letter-spacing:10px;font-weight:700;color:#444;white-space:pre-wrap;
+    }
+    #letras{padding:10px;font-size:1.1rem;border-radius:8px;border:2px solid #74ebd5;text-transform:uppercase;text-align:center;width:60px;outline:none}
+    #letras:focus{border-color:#07d0eb}
+    button{padding:10px 18px;margin:10px;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,#07d0eb,#25cf97);color:#fff}
+    button:hover{transform:scale(1.03)}
+    #letrasEscolhidas{font-size:1.2rem;color:#333;font-weight:700;margin:12px 0}
+    #mensagem{display:none;font-size:1.6rem;margin-top:16px;font-weight:700;animation:fadeIn .9s}
+    #mensagem.vitoria{color:#28a745} #mensagem.derrota{color:#dc3545}
+    #dica{display:none;font-size:1.15rem;color:#ff6347;font-weight:700;margin-top:12px;animation:fadeIn .9s}
+    @keyframes fadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1> Jogo da Forca </h1>
+    <img id="imagem" src="img/forca0.png" alt="forca">
+    <div id="palavra"></div>
+
+    <input id="letras" type="text" maxlength="1" placeholder="A">
+    <button onclick="enviarLetra()">Enviar</button>
+
+    <h2>Letras erradas</h2>
+    <div id="letrasEscolhidas"></div>
+
+    <div id="mensagem"></div>
+    <div id="dica"></div>
+    <button id="reiniciar" onclick="iniciarJogo()">Recomeçar</button>
+  </div>
+
+  <script>
+    const listaPalavras = ['mariah','clarita','japonesa','emili','ana luisa'];
+
+    const dicas = {
+      'mariah': "Dica: ela destruiu seu coração ",
+      'japonesa': "Dica: ela te ignorou ",
+      'clarita': "Dica: você destruiu o coração dela ",
+      'ana luiza': "Dica: ela namora "
+    };
+
+    let palavraEscolhida = '';
+    let palavraNorm = '';
+    let exibicaoPalavra = [];
+    let letrasTentadas = [];
+    let tentativasRestantes = 7;
+    let numErros = 0;
+
+    function isLetter(ch){ return /^[\p{L}]$/u.test(ch); }
+
+    function iniciarJogo(){
+      document.getElementById('reiniciar').style.display = 'none';
+      document.getElementById('letras').disabled = false;
+      document.getElementById('letras').value = '';
+      document.getElementById('dica').style.display = 'none';
+      document.getElementById('mensagem').style.display = 'none';
+      letrasTentadas = [];
+      tentativasRestantes = 7;
+      numErros = 0;
+
+      palavraEscolhida = listaPalavras[Math.floor(Math.random()*listaPalavras.length)];
+      palavraNorm = palavraEscolhida.toLowerCase();
+
+     
+      exibicaoPalavra = palavraNorm.split('').map(ch => {
+        if (isLetter(ch)) return '_';
+        if (ch === ' '){
+          return (palavraNorm === 'ana luisa') ? '' : ' ';
+        }
+       
+        return ch;
+      });
+
+      atualizarExibicao();
+    }
+
+    function atualizarExibicao(){
+      const vis = exibicaoPalavra.map(el => {
+        if (el === '') return '';     
+        if (el === ' ') return ' ';    
+        if (el === '-') return '-';
+        if (el === '_') return '_';
+        return el.toUpperCase();       
+      }).join(' ');
+
+      document.getElementById('palavra').innerText = vis;
+      document.getElementById('letrasEscolhidas').innerText = letrasTentadas.map(l=>l.toUpperCase()).join(', ');
+      document.getElementById('imagem').src = `img/forca${numErros}.png`;
+      document.getElementById('mensagem').innerText = '';
+
+      if (numErros > 1){
+        const d = dicas[palavraNorm] || '';
+        document.getElementById('dica').style.display = d ? 'block' : 'none';
+        document.getElementById('dica').innerText = d;
+      } else {
+        document.getElementById('dica').style.display = 'none';
+      }
+
+ 
+      if (tentativasRestantes === 0){
+        encerrarJogo(`Você morreu! A palavra era: ${palavraEscolhida.toUpperCase()}`, false);
+        return;
+      }
+
+      const falta = palavraNorm.split('').some((ch, idx) => {
+        if (isLetter(ch)) return exibicaoPalavra[idx] === '_';
+        return false;
+      });
+
+      if (!falta) encerrarJogo('🎉 Você venceu! 🎉', true);
+    }
+
+    function enviarLetra(){
+      const entrada = document.getElementById('letras');
+      const raw = entrada.value;
+      if (!raw) return;
+      const letra = raw.toLowerCase();
+
+      if (!isLetter(letra)){
+        alert('Informe uma letra válida (apenas letras).');
+        entrada.value = '';
+        return;
+      }
+      if (letrasTentadas.includes(letra)){
+        alert('Essa letra já foi usada. Digite outra.');
+        entrada.value = '';
+        return;
+      }
+
+      letrasTentadas.push(letra);
+
+      let acertou = false;
+      for (let i=0;i<palavraNorm.length;i++){
+        if (palavraNorm[i] === letra){
+          exibicaoPalavra[i] = letra;
+          acertou = true;
+        }
+      }
+
+      if (!acertou){
+        tentativasRestantes--;
+        numErros++;
+      }
+
+      entrada.value = '';
+      atualizarExibicao();
+    }
+
+    function encerrarJogo(mensagem, venceu){
+      document.getElementById('letras').disabled = true;
+      const msg = document.getElementById('mensagem');
+      msg.style.display = 'block';
+      msg.innerText = mensagem;
+      msg.className = venceu ? 'vitoria' : 'derrota';
+      document.getElementById('reiniciar').style.display = 'inline-block';
+    }
+
+    window.onload = iniciarJogo;
+  </script>
+</body>
+</html>
